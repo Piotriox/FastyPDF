@@ -11,6 +11,7 @@ public sealed class PickerService
         var picker = new FileOpenPicker();
         Initialize(picker);
         picker.ViewMode = PickerViewMode.List;
+        picker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
         picker.FileTypeFilter.Add(".pdf");
         if (multiple)
         {
@@ -41,6 +42,7 @@ public sealed class PickerService
         var picker = new FileSavePicker();
         Initialize(picker);
         picker.SuggestedFileName = suggestedName;
+        picker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
         picker.FileTypeChoices.Add("PDF", [".pdf"]);
         var file = await picker.PickSaveFileAsync();
         return file?.Path;
@@ -50,6 +52,7 @@ public sealed class PickerService
     {
         var picker = new FolderPicker();
         Initialize(picker);
+        picker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
         picker.FileTypeFilter.Add("*");
         var folder = await picker.PickSingleFolderAsync();
         return folder?.Path;

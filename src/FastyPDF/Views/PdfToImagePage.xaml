@@ -23,23 +23,30 @@
             <Button Content="PDF Seç" Command="{x:Bind ViewModel.OpenCommand}" />
             <ToggleSwitch Header="Tüm sayfalar" IsOn="{x:Bind ViewModel.ExportAll, Mode=TwoWay}" />
             <ComboBox Header="Biçim" ItemsSource="{x:Bind ViewModel.Formats}" SelectedItem="{x:Bind ViewModel.SelectedFormat, Mode=TwoWay}" />
-            <TextBox Header="Sayfa aralığı (isteğe bağlı)" PlaceholderText="1-3, 8" Text="{x:Bind ViewModel.RangeText, Mode=TwoWay}" />
+            <TextBox Header="Sayfa aralığı (isteğe bağlı)" PlaceholderText="1-3, 8" Text="{x:Bind ViewModel.RangeText, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.CanSpecifyRange, Mode=OneWay}" />
         </StackPanel>
-        <GridView
-            x:Name="PageGrid"
-            Grid.Row="2"
-            ItemsSource="{x:Bind ViewModel.Pages}"
-            SelectionMode="Multiple"
-            Visibility="{x:Bind ViewModel.HasDocument, Mode=OneWay, Converter={StaticResource BoolToVis}}">
-            <GridView.ItemTemplate>
-                <DataTemplate x:DataType="vm:PageItemViewModel">
-                    <StackPanel Width="120" Spacing="6">
-                        <Image Height="160" Source="{x:Bind Preview, Mode=OneWay}" Stretch="Uniform" />
-                        <TextBlock HorizontalAlignment="Center" Text="{x:Bind DisplayNumber}" />
-                    </StackPanel>
-                </DataTemplate>
-            </GridView.ItemTemplate>
-        </GridView>
+        <Grid Grid.Row="2">
+            <GridView
+                x:Name="PageGrid"
+                ItemsSource="{x:Bind ViewModel.Pages}"
+                SelectionMode="Multiple"
+                Visibility="{x:Bind ViewModel.HasDocument, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                <GridView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:PageItemViewModel">
+                        <StackPanel Width="120" Spacing="6">
+                            <Border Height="160" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                                <Image Source="{x:Bind Preview, Mode=OneWay}" Stretch="Uniform" />
+                            </Border>
+                            <TextBlock HorizontalAlignment="Center" Text="{x:Bind DisplayNumber}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </GridView.ItemTemplate>
+            </GridView>
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" Visibility="{x:Bind ViewModel.HasDocument, Mode=OneWay, Converter={StaticResource InverseBoolToVis}}">
+                <TextBlock Text="PDF dosyanızı buraya sürükleyin" HorizontalAlignment="Center" />
+                <Button Content="PDF Seç" Command="{x:Bind ViewModel.OpenCommand}" />
+            </StackPanel>
+        </Grid>
         <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8">
             <Button Content="Dışa aktar" Click="Export_Click" Style="{StaticResource AccentButtonStyle}" />
             <Button Content="İptal" Command="{x:Bind ViewModel.CancelCommand}" />

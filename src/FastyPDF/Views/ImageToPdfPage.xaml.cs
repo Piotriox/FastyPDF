@@ -15,6 +15,7 @@ public sealed partial class ImageToPdfPage : Page
     {
         ViewModel = App.Services.GetRequiredService<ImageToPdfViewModel>();
         InitializeComponent();
+        DataContext = this;
     }
 
     private void OnDragOver(object sender, DragEventArgs e) => e.AcceptedOperation = DataPackageOperation.Copy;

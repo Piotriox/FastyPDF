@@ -58,6 +58,15 @@ public sealed partial class ReaderPage : Page
         }
     }
 
+    private async void PageNumberBox_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == VirtualKey.Enter)
+        {
+            await ViewModel.GoToPageNumberCommand.ExecuteAsync(PageNumberBox.Text);
+            e.Handled = true;
+        }
+    }
+
     private void Viewport_SizeChanged(object sender, SizeChangedEventArgs e)
     {
         ViewModel.ViewportWidth = Math.Max(1, e.NewSize.Width - 24);

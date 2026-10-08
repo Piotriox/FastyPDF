@@ -17,6 +17,7 @@ public sealed partial class MergePage : Page
     {
         ViewModel = App.Services.GetRequiredService<MergeViewModel>();
         InitializeComponent();
+        DataContext = this;
         KeyboardAccelerators.Add(CreateAccelerator(VirtualKey.O, VirtualKeyModifiers.Control, () => ViewModel.AddFilesCommand.Execute(null)));
         KeyboardAccelerators.Add(CreateAccelerator(VirtualKey.S, VirtualKeyModifiers.Control, () => ViewModel.MergeCommand.Execute(null)));
     }

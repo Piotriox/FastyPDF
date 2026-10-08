@@ -9,7 +9,6 @@ public partial class MergeViewModel : ToolViewModelBase
 {
     private readonly IPdfDocumentService _documents;
     private readonly IPdfManipulationService _manipulation;
-    private readonly IFileService _files;
     private readonly IRecentFilesService _recent;
     private readonly PickerService _pickers;
     private CancellationTokenSource? _cts;
@@ -17,15 +16,14 @@ public partial class MergeViewModel : ToolViewModelBase
     public MergeViewModel(
         IPdfDocumentService documents,
         IPdfManipulationService manipulation,
-        IFileService files,
         IRecentFilesService recent,
         PickerService pickers)
     {
         _documents = documents;
         _manipulation = manipulation;
-        _files = files;
         _recent = recent;
         _pickers = pickers;
+        Files.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasFiles));
     }
 
     public ObservableCollection<FileItemViewModel> Files { get; } = [];
@@ -122,7 +120,6 @@ public partial class MergeViewModel : ToolViewModelBase
             return;
         }
 
-        output = EnsureUniqueIfExists(output);
         _cts = new CancellationTokenSource();
         IsBusy = true;
         StatusMessage = "PDF birleştiriliyor...";
@@ -144,14 +141,4 @@ public partial class MergeViewModel : ToolViewModelBase
 
     [RelayCommand]
     private void Cancel() => _cts?.Cancel();
-
-    private string EnsureUniqueIfExists(string output)
-    {
-        if (!File.Exists(output))
-        {
-            return output;
-        }
-
-        return _files.GetUniqueFilePath(Path.GetDirectoryName(output)!, Path.GetFileName(output));
-    }
 }

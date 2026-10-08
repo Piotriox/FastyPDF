@@ -41,6 +41,11 @@ public sealed partial class OrganizePage : Page
         }
     }
 
+    private void PageGrid_DragItemsStarting(object sender, DragItemsStartingEventArgs e)
+    {
+        ViewModel.CaptureBeforeReorder();
+    }
+
     private void Delete_Click(object sender, RoutedEventArgs e)
     {
         ViewModel.DeleteSelectedCommand.Execute(PageGrid.SelectedItems.ToList());

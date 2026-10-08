@@ -20,8 +20,8 @@
         </StackPanel>
         <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8">
             <Button Content="PDF Seç" Command="{x:Bind ViewModel.OpenCommand}" />
-            <Button Content="Geri al" Command="{x:Bind ViewModel.UndoCommand}" />
-            <Button Content="Yinele" Command="{x:Bind ViewModel.RedoCommand}" />
+            <Button Content="Geri al" Command="{x:Bind ViewModel.UndoCommand}" IsEnabled="{x:Bind ViewModel.CanUndo, Mode=OneWay}" />
+            <Button Content="Yinele" Command="{x:Bind ViewModel.RedoCommand}" IsEnabled="{x:Bind ViewModel.CanRedo, Mode=OneWay}" />
             <Button Content="Seçilenleri sil" Click="Delete_Click" />
             <Button Content="Kaydet" Command="{x:Bind ViewModel.SaveCommand}" Style="{StaticResource AccentButtonStyle}" />
         </StackPanel>
@@ -33,6 +33,7 @@
                 CanReorderItems="True"
                 CanDragItems="True"
                 AllowDrop="True"
+                DragItemsStarting="PageGrid_DragItemsStarting"
                 Visibility="{x:Bind ViewModel.HasDocument, Mode=OneWay, Converter={StaticResource BoolToVis}}">
                 <GridView.ItemTemplate>
                     <DataTemplate x:DataType="vm:PageItemViewModel">

@@ -44,6 +44,7 @@ public partial class PdfToImageViewModel : ToolViewModelBase
     public IReadOnlyList<string> Formats { get; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasDocument))]
     private string? _sourcePath;
 
     [ObservableProperty]
@@ -53,7 +54,10 @@ public partial class PdfToImageViewModel : ToolViewModelBase
     private string _selectedFormat;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanSpecifyRange))]
     private bool _exportAll = true;
+
+    public bool CanSpecifyRange => !ExportAll;
 
     public bool HasDocument => !string.IsNullOrEmpty(SourcePath);
 

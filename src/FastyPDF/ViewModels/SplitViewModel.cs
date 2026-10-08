@@ -41,6 +41,7 @@ public partial class SplitViewModel : ToolViewModelBase
     public ObservableCollection<PageItemViewModel> Pages { get; } = [];
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasDocument))]
     private string? _sourcePath;
 
     [ObservableProperty]

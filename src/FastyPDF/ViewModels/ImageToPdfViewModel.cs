@@ -23,6 +23,7 @@ public partial class ImageToPdfViewModel : ToolViewModelBase
         _manipulation = manipulation;
         _recent = recent;
         _pickers = pickers;
+        Images.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasImages));
     }
 
     public ObservableCollection<FileItemViewModel> Images { get; } = [];

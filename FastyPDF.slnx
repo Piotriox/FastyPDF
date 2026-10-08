@@ -3,4 +3,7 @@
     <Project Path="src/FastyPDF.Core/FastyPDF.Core.csproj" />
     <Project Path="src/FastyPDF/FastyPDF.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FastyPDF.Core.Tests/FastyPDF.Core.Tests.csproj" />
+  </Folder>
 </Solution>

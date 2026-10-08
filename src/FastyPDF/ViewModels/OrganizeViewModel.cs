@@ -17,6 +17,7 @@ public partial class OrganizeViewModel : ToolViewModelBase
     private readonly IRecentFilesService _recent;
     private readonly PickerService _pickers;
     private readonly UndoRedoService<int[]> _undo = new();
+    private readonly Dictionary<int, PageItemViewModel> _pagePool = new();
     private CancellationTokenSource? _loadCts;
     private bool _suspendHistory;
 
@@ -40,6 +41,7 @@ public partial class OrganizeViewModel : ToolViewModelBase
     public ObservableCollection<PageItemViewModel> Pages { get; } = [];
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasDocument))]
     private string? _sourcePath;
 
     [ObservableProperty]
@@ -72,9 +74,12 @@ public partial class OrganizeViewModel : ToolViewModelBase
             SourcePath = info.Path;
             _suspendHistory = true;
             Pages.Clear();
+            _pagePool.Clear();
             for (var i = 0; i < info.PageCount; i++)
             {
-                Pages.Add(new PageItemViewModel { PageIndex = i });
+                var pageItem = new PageItemViewModel { PageIndex = i };
+                _pagePool[i] = pageItem;
+                Pages.Add(pageItem);
             }
 
             _suspendHistory = false;
@@ -166,7 +171,7 @@ public partial class OrganizeViewModel : ToolViewModelBase
         }
     }
 
-    public void NotifyReordered()
+    public void CaptureBeforeReorder()
     {
         if (_suspendHistory)
         {
@@ -174,7 +179,6 @@ public partial class OrganizeViewModel : ToolViewModelBase
         }
 
         PushHistory();
-        RefreshUndoState();
     }
 
     private void OnPagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -198,13 +202,18 @@ public partial class OrganizeViewModel : ToolViewModelBase
     private void Restore(int[] indices)
     {
         _suspendHistory = true;
-        var lookup = Pages.ToDictionary(page => page.PageIndex);
         Pages.Clear();
         foreach (var index in indices)
         {
-            if (lookup.TryGetValue(index, out var page))
+            if (_pagePool.TryGetValue(index, out var page))
             {
                 Pages.Add(page);
+            }
+            else
+            {
+                var newPage = new PageItemViewModel { PageIndex = index };
+                _pagePool[index] = newPage;
+                Pages.Add(newPage);
             }
         }
 

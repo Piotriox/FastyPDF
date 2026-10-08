@@ -33,12 +33,24 @@ public sealed class WicImageEncoder : IImageEncoder
         var storageFolder = await StorageFolder.GetFolderFromPathAsync(folder);
         var file = await storageFolder.CreateFileAsync(name, CreationCollisionOption.FailIfExists);
         using var stream = await file.OpenAsync(FileAccessMode.ReadWrite);
-        var encoderId = format.Equals("jpg", StringComparison.OrdinalIgnoreCase)
-                        || format.Equals("jpeg", StringComparison.OrdinalIgnoreCase)
-            ? BitmapEncoder.JpegEncoderId
-            : BitmapEncoder.PngEncoderId;
+        var isJpeg = format.Equals("jpg", StringComparison.OrdinalIgnoreCase)
+                     || format.Equals("jpeg", StringComparison.OrdinalIgnoreCase);
+        var encoderId = isJpeg ? BitmapEncoder.JpegEncoderId : BitmapEncoder.PngEncoderId;
 
-        var encoder = await BitmapEncoder.CreateAsync(encoderId, stream);
+        BitmapEncoder encoder;
+        if (isJpeg)
+        {
+            var propertySet = new BitmapPropertySet();
+            var qualityFloat = Math.Clamp(jpegQuality / 100f, 0.01f, 1.0f);
+            var qualityValue = new BitmapTypedValue(qualityFloat, Windows.Foundation.PropertyType.Single);
+            propertySet.Add("ImageQuality", qualityValue);
+            encoder = await BitmapEncoder.CreateAsync(encoderId, stream, propertySet);
+        }
+        else
+        {
+            encoder = await BitmapEncoder.CreateAsync(encoderId, stream);
+        }
+
         encoder.SetSoftwareBitmap(softwareBitmap);
         await encoder.FlushAsync();
     }

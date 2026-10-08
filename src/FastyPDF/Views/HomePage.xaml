@@ -29,8 +29,8 @@
                 </GridView.ItemTemplate>
             </GridView>
 
-            <TextBlock Text="Son dosyalar" Style="{StaticResource SubtitleTextBlockStyle}" Visibility="{x:Bind ViewModel.HasRecentFiles, Mode=OneWay}" />
-            <ListView ItemsSource="{x:Bind ViewModel.RecentFiles, Mode=OneWay}" IsItemClickEnabled="True" ItemClick="Recent_ItemClick" Visibility="{x:Bind ViewModel.HasRecentFiles, Mode=OneWay}">
+            <TextBlock Text="Son dosyalar" Style="{StaticResource SubtitleTextBlockStyle}" Visibility="{x:Bind ViewModel.HasRecentFiles, Mode=OneWay, Converter={StaticResource BoolToVis}}" />
+            <ListView ItemsSource="{x:Bind ViewModel.RecentFiles, Mode=OneWay}" IsItemClickEnabled="True" ItemClick="Recent_ItemClick" Visibility="{x:Bind ViewModel.HasRecentFiles, Mode=OneWay, Converter={StaticResource BoolToVis}}">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="models:RecentFileEntry">
                         <StackPanel Padding="4">

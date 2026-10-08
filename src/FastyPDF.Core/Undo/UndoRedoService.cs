@@ -34,11 +34,11 @@ public sealed class UndoRedoService<T> : IUndoRedoService<T>
     {
         _undo.Push(state);
         _redo.Clear();
-        while (_undo.Count > _limit)
+        if (_undo.Count > _limit)
         {
-            var buffer = _undo.Reverse().Skip(1).Reverse().ToArray();
+            var remaining = _undo.Take(_limit).Reverse().ToArray();
             _undo.Clear();
-            foreach (var item in buffer)
+            foreach (var item in remaining)
             {
                 _undo.Push(item);
             }
