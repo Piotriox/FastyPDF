@@ -27,22 +27,30 @@ public partial class App : Application
 
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
-        var services = new ServiceCollection();
-        ConfigureServices(services);
-        Services = services.BuildServiceProvider();
-
-        var settings = Services.GetRequiredService<ISettingsService>();
-        await settings.LoadAsync();
-        await Services.GetRequiredService<IRecentFilesService>().LoadAsync();
-
-        Window = Services.GetRequiredService<MainWindow>();
-        DispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
-        if (Window.Content is FrameworkElement root)
+        try
         {
-            Services.GetRequiredService<ThemeService>().Apply(root);
-        }
+            var services = new ServiceCollection();
+            ConfigureServices(services);
+            Services = services.BuildServiceProvider();
 
-        Window.Activate();
+            var settings = Services.GetRequiredService<ISettingsService>();
+            await settings.LoadAsync();
+            await Services.GetRequiredService<IRecentFilesService>().LoadAsync();
+
+            Window = Services.GetRequiredService<MainWindow>();
+            DispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+            if (Window.Content is FrameworkElement root)
+            {
+                Services.GetRequiredService<ThemeService>().Apply(root);
+            }
+
+            Window.Activate();
+        }
+        catch (Exception ex)
+        {
+            Services?.GetService<IAppLog>()?.Error("OnLaunched failed", ex);
+            throw;
+        }
     }
 
     private static void ConfigureServices(IServiceCollection services)
