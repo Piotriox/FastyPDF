@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "FastyPDF (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "FastyPDF (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

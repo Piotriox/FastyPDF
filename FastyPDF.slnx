@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FastyPDF.Core/FastyPDF.Core.csproj" />
+    <Project Path="src/FastyPDF/FastyPDF.csproj" />
+  </Folder>
+</Solution>
