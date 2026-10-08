@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="FastyPDF.Views.ImageToPdfPage"
+    x:Name="RootPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:FastyPDF.ViewModels"
+    AllowDrop="True"
+    DragOver="OnDragOver"
+    Drop="OnDrop">
+    <Grid Padding="24" RowSpacing="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <StackPanel Spacing="4">
+            <TextBlock Text="Resim → PDF" Style="{StaticResource TitleTextBlockStyle}" />
+            <TextBlock Text="Görselleri buraya sürükleyin. Her görsel ayrı bir sayfa olur." Opacity="0.75" />
+        </StackPanel>
+        <Grid Grid.Row="1">
+            <ListView
+                ItemsSource="{x:Bind ViewModel.Images}"
+                CanReorderItems="True"
+                CanDragItems="True"
+                AllowDrop="True"
+                Visibility="{x:Bind ViewModel.HasImages, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:FileItemViewModel">
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="{x:Bind Name}" />
+                                <TextBlock Text="{x:Bind Details, Mode=OneWay}" Opacity="0.7" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Kaldır" Command="{Binding ViewModel.RemoveCommand, ElementName=RootPage}" CommandParameter="{Binding}" />
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" Visibility="{x:Bind ViewModel.HasImages, Mode=OneWay, Converter={StaticResource InverseBoolToVis}}">
+                <TextBlock Text="Görselleri buraya sürükleyin" HorizontalAlignment="Center" />
+                <Button Content="Görsel Seç" Command="{x:Bind ViewModel.AddCommand}" />
+            </StackPanel>
+        </Grid>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8">
+            <Button Content="Görsel ekle" Command="{x:Bind ViewModel.AddCommand}" />
+            <Button Content="PDF oluştur" Command="{x:Bind ViewModel.ConvertCommand}" Style="{StaticResource AccentButtonStyle}" />
+        </StackPanel>
+        <StackPanel Grid.Row="3" Spacing="8">
+            <ProgressBar IsIndeterminate="{x:Bind ViewModel.IsProgressIndeterminate, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay, Converter={StaticResource BoolToVis}}" />
+            <TextBlock Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" />
+            <InfoBar IsOpen="{x:Bind ViewModel.IsErrorOpen, Mode=TwoWay}" Severity="Error" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" />
+            <InfoBar IsOpen="{x:Bind ViewModel.IsSuccessOpen, Mode=TwoWay}" Severity="Success" Message="{x:Bind ViewModel.SuccessMessage, Mode=OneWay}" />
+        </StackPanel>
+    </Grid>
+</Page>

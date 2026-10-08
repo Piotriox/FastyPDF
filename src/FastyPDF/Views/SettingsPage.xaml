@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="FastyPDF.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:FastyPDF.ViewModels">
+    <StackPanel Padding="28" Spacing="16" MaxWidth="640" HorizontalAlignment="Left">
+        <TextBlock Text="Ayarlar" Style="{StaticResource TitleTextBlockStyle}" />
+        <ComboBox
+            Header="Tema"
+            Width="280"
+            ItemsSource="{x:Bind ViewModel.Themes}"
+            SelectedItem="{x:Bind ViewModel.SelectedTheme, Mode=TwoWay}"
+            DisplayMemberPath="Label" />
+        <TextBox Header="Varsayılan çıktı klasörü" Text="{x:Bind ViewModel.DefaultOutputFolder, Mode=TwoWay}" IsReadOnly="True" />
+        <Button Content="Klasör seç" Command="{x:Bind ViewModel.PickOutputFolderCommand}" />
+        <Button Content="Son dosyaları temizle" Command="{x:Bind ViewModel.ClearRecentCommand}" />
+        <TextBlock Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" Opacity="0.75" />
+    </StackPanel>
+</Page>

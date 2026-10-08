@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="FastyPDF.Views.PdfToImagePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:FastyPDF.ViewModels"
+    AllowDrop="True"
+    DragOver="OnDragOver"
+    Drop="OnDrop">
+    <Grid Padding="24" RowSpacing="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <StackPanel Spacing="4">
+            <TextBlock Text="PDF → Resim" Style="{StaticResource TitleTextBlockStyle}" />
+            <TextBlock Text="PDF seçin, sayfaları dışa aktarın. Dosyalar page-001.png biçiminde kaydedilir." Opacity="0.75" TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel Grid.Row="1" Spacing="8">
+            <Button Content="PDF Seç" Command="{x:Bind ViewModel.OpenCommand}" />
+            <ToggleSwitch Header="Tüm sayfalar" IsOn="{x:Bind ViewModel.ExportAll, Mode=TwoWay}" />
+            <ComboBox Header="Biçim" ItemsSource="{x:Bind ViewModel.Formats}" SelectedItem="{x:Bind ViewModel.SelectedFormat, Mode=TwoWay}" />
+            <TextBox Header="Sayfa aralığı (isteğe bağlı)" PlaceholderText="1-3, 8" Text="{x:Bind ViewModel.RangeText, Mode=TwoWay}" />
+        </StackPanel>
+        <GridView
+            x:Name="PageGrid"
+            Grid.Row="2"
+            ItemsSource="{x:Bind ViewModel.Pages}"
+            SelectionMode="Multiple"
+            Visibility="{x:Bind ViewModel.HasDocument, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+            <GridView.ItemTemplate>
+                <DataTemplate x:DataType="vm:PageItemViewModel">
+                    <StackPanel Width="120" Spacing="6">
+                        <Image Height="160" Source="{x:Bind Preview, Mode=OneWay}" Stretch="Uniform" />
+                        <TextBlock HorizontalAlignment="Center" Text="{x:Bind DisplayNumber}" />
+                    </StackPanel>
+                </DataTemplate>
+            </GridView.ItemTemplate>
+        </GridView>
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8">
+            <Button Content="Dışa aktar" Click="Export_Click" Style="{StaticResource AccentButtonStyle}" />
+            <Button Content="İptal" Command="{x:Bind ViewModel.CancelCommand}" />
+        </StackPanel>
+        <StackPanel Grid.Row="4" Spacing="8">
+            <ProgressBar IsIndeterminate="{x:Bind ViewModel.IsProgressIndeterminate, Mode=OneWay}" Value="{x:Bind ViewModel.ProgressValue, Mode=OneWay}" Maximum="100" Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay, Converter={StaticResource BoolToVis}}" />
+            <TextBlock Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" />
+            <InfoBar IsOpen="{x:Bind ViewModel.IsErrorOpen, Mode=TwoWay}" Severity="Error" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" />
+            <InfoBar IsOpen="{x:Bind ViewModel.IsSuccessOpen, Mode=TwoWay}" Severity="Success" Message="{x:Bind ViewModel.SuccessMessage, Mode=OneWay}" />
+        </StackPanel>
+    </Grid>
+</Page>

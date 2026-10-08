@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="FastyPDF.Views.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:FastyPDF.ViewModels"
+    xmlns:models="using:FastyPDF.Core.Models">
+    <ScrollViewer>
+        <StackPanel Padding="28" Spacing="20">
+            <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                <Image Source="ms-appx:///Assets/fastypdf.png" Height="48" Stretch="Uniform" />
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="FastyPDF" Style="{StaticResource TitleTextBlockStyle}" />
+                    <TextBlock Text="Yerel, hızlı ve sade Windows PDF araçları" Opacity="0.7" />
+                </StackPanel>
+            </StackPanel>
+
+            <GridView ItemsSource="{x:Bind ViewModel.Tools}" IsItemClickEnabled="True" ItemClick="Tools_ItemClick" SelectionMode="None">
+                <GridView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ToolCardViewModel">
+                        <Border Width="240" Height="140" Padding="16" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                            <StackPanel Spacing="8">
+                                <FontIcon Glyph="{x:Bind Glyph}" FontSize="22" HorizontalAlignment="Left" />
+                                <TextBlock Text="{x:Bind Title}" Style="{StaticResource SubtitleTextBlockStyle}" />
+                                <TextBlock Text="{x:Bind Description}" TextWrapping="Wrap" Opacity="0.75" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </GridView.ItemTemplate>
+            </GridView>
+
+            <TextBlock Text="Son dosyalar" Style="{StaticResource SubtitleTextBlockStyle}" Visibility="{x:Bind ViewModel.HasRecentFiles, Mode=OneWay}" />
+            <ListView ItemsSource="{x:Bind ViewModel.RecentFiles, Mode=OneWay}" IsItemClickEnabled="True" ItemClick="Recent_ItemClick" Visibility="{x:Bind ViewModel.HasRecentFiles, Mode=OneWay}">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="models:RecentFileEntry">
+                        <StackPanel Padding="4">
+                            <TextBlock Text="{x:Bind DisplayName}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

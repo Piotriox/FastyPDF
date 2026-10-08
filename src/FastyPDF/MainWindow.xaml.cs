@@ -1,27 +1,43 @@
+using FastyPDF.Navigation;
 using Microsoft.UI.Xaml;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+using Microsoft.UI.Xaml.Controls;
 
 namespace FastyPDF;
 
-/// <summary>
-/// The application window. This hosts a Frame that displays pages. Add your
-/// UI and logic to MainPage.xaml / MainPage.xaml.cs instead of here so you
-/// can use Page features such as navigation events and the Loaded lifecycle.
-/// </summary>
 public sealed partial class MainWindow : Window
 {
-    public MainWindow()
-    {
-        InitializeComponent();
+    private readonly INavigationService _navigation;
+    private bool _ready;
 
+    public MainWindow(INavigationService navigation)
+    {
+        _navigation = navigation;
+        InitializeComponent();
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
-
         AppWindow.SetIcon("Assets/AppIcon.ico");
+        _navigation.Initialize(ContentFrame);
+        _ready = true;
+        NavView.SelectedItem = NavView.MenuItems[0];
+        _navigation.Navigate(ToolIds.Home);
+    }
 
-        // Navigate the root frame to the main page on startup.
-        RootFrame.Navigate(typeof(MainPage));
+    private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+    {
+        if (!_ready)
+        {
+            return;
+        }
+
+        if (args.IsSettingsSelected)
+        {
+            _navigation.Navigate(ToolIds.Settings);
+            return;
+        }
+
+        if (args.SelectedItem is NavigationViewItem { Tag: string tag })
+        {
+            _navigation.Navigate(tag);
+        }
     }
 }

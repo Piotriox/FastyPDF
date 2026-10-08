@@ -197,11 +197,6 @@ public sealed class PdfSharpManipulationService : IPdfManipulationService
             Directory.CreateDirectory(directory);
         }
 
-        if (File.Exists(outputPath))
-        {
-            throw new PdfOperationException(PdfErrorKind.Unknown, "Aynı isimde bir dosya zaten var. Farklı bir ad seçin.");
-        }
-
         document.Save(outputPath);
     }
 
