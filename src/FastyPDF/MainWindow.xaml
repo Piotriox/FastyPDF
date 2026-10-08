@@ -28,7 +28,9 @@
             OpenPaneLength="240"
             CompactModeThresholdWidth="720"
             PaneDisplayMode="Left"
-            SelectionChanged="NavView_SelectionChanged">
+            ItemInvoked="NavView_ItemInvoked"
+            SelectionChanged="NavView_SelectionChanged"
+            BackRequested="NavView_BackRequested">
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Ana sayfa" Tag="Home">
                     <NavigationViewItem.Icon>

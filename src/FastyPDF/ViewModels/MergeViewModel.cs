@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.Input;
 using FastyPDF.Core.Abstractions;
+using FastyPDF.Navigation;
 using FastyPDF.Services;
 
 namespace FastyPDF.ViewModels;
@@ -11,18 +12,21 @@ public partial class MergeViewModel : ToolViewModelBase
     private readonly IPdfManipulationService _manipulation;
     private readonly IRecentFilesService _recent;
     private readonly PickerService _pickers;
+    private readonly INavigationService _navigation;
     private CancellationTokenSource? _cts;
 
     public MergeViewModel(
         IPdfDocumentService documents,
         IPdfManipulationService manipulation,
         IRecentFilesService recent,
-        PickerService pickers)
+        PickerService pickers,
+        INavigationService navigation)
     {
         _documents = documents;
         _manipulation = manipulation;
         _recent = recent;
         _pickers = pickers;
+        _navigation = navigation;
         Files.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasFiles));
     }
 
@@ -140,5 +144,9 @@ public partial class MergeViewModel : ToolViewModelBase
     }
 
     [RelayCommand]
-    private void Cancel() => _cts?.Cancel();
+    private void Cancel()
+    {
+        _cts?.Cancel();
+        _navigation.Navigate(ToolIds.Home);
+    }
 }

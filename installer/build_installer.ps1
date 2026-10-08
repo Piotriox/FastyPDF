@@ -77,5 +77,5 @@ finally {
 
 Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host " Installer generated successfully!        " -ForegroundColor Green
-Write-Host " Location: $(Join-Path $scriptDir 'FastyPDF_Setup_v1.0.0.exe')" -ForegroundColor Cyan
+Write-Host " Location: $(Join-Path $scriptDir 'FastyPDF_Setup_v1.0.2.exe')" -ForegroundColor Cyan
 Write-Host "==========================================" -ForegroundColor Cyan

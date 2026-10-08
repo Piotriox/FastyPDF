@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FastyPDF.Core.Abstractions;
 using FastyPDF.Core.Services;
+using FastyPDF.Navigation;
 using FastyPDF.Services;
 
 namespace FastyPDF.ViewModels;
@@ -16,6 +17,7 @@ public partial class PdfToImageViewModel : ToolViewModelBase
     private readonly ISettingsService _settings;
     private readonly IRecentFilesService _recent;
     private readonly PickerService _pickers;
+    private readonly INavigationService _navigation;
     private CancellationTokenSource? _loadCts;
     private CancellationTokenSource? _workCts;
 
@@ -26,7 +28,8 @@ public partial class PdfToImageViewModel : ToolViewModelBase
         IFileService files,
         ISettingsService settings,
         IRecentFilesService recent,
-        PickerService pickers)
+        PickerService pickers,
+        INavigationService navigation)
     {
         _documents = documents;
         _render = render;
@@ -35,6 +38,7 @@ public partial class PdfToImageViewModel : ToolViewModelBase
         _settings = settings;
         _recent = recent;
         _pickers = pickers;
+        _navigation = navigation;
         Formats = ["PNG", "JPEG"];
         SelectedFormat = "PNG";
     }
@@ -171,7 +175,12 @@ public partial class PdfToImageViewModel : ToolViewModelBase
     }
 
     [RelayCommand]
-    private void Cancel() => _workCts?.Cancel();
+    private void Cancel()
+    {
+        _workCts?.Cancel();
+        _loadCts?.Cancel();
+        _navigation.Navigate(ToolIds.Home);
+    }
 
     private async Task LoadThumbnailsAsync(CancellationToken cancellationToken)
     {
