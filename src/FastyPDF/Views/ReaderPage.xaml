@@ -7,56 +7,221 @@
     AllowDrop="True"
     DragOver="OnDragOver"
     Drop="OnDrop">
+
+    <Page.Resources>
+        <Style x:Key="ToolbarButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="8,4" />
+        </Style>
+        <Style x:Key="ToolbarToggleButtonStyle" TargetType="ToggleButton" BasedOn="{StaticResource DefaultToggleButtonStyle}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="8,4" />
+        </Style>
+    </Page.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <CommandBar DefaultLabelPosition="Right">
-            <AppBarButton Icon="OpenFile" Label="Aç" Command="{x:Bind ViewModel.OpenCommand}" />
-            <AppBarButton Icon="Cancel" Label="Kapat" Command="{x:Bind ViewModel.CloseDocumentCommand}" />
-            <AppBarSeparator />
-            <AppBarButton Icon="Previous" Label="İlk" Command="{x:Bind ViewModel.FirstCommand}" />
-            <AppBarButton Icon="Back" Label="Önceki" Command="{x:Bind ViewModel.PreviousCommand}" />
-            <AppBarButton Icon="Forward" Label="Sonraki" Command="{x:Bind ViewModel.NextCommand}" />
-            <AppBarButton Icon="Next" Label="Son" Command="{x:Bind ViewModel.LastCommand}" />
-            <AppBarSeparator />
-            <AppBarButton Icon="ZoomIn" Label="Yakınlaştır" Command="{x:Bind ViewModel.ZoomInCommand}" />
-            <AppBarButton Icon="ZoomOut" Label="Uzaklaştır" Command="{x:Bind ViewModel.ZoomOutCommand}" />
-            <AppBarButton Icon="FullScreen" Label="Genişliğe sığdır" Command="{x:Bind ViewModel.FitWidthCommand}" />
-            <AppBarButton Icon="View" Label="Sayfaya sığdır" Command="{x:Bind ViewModel.FitPageCommand}" />
-            <AppBarButton Icon="FullScreen" Label="Tam ekran" Click="FullScreen_Click" />
-            <AppBarElementContainer>
-                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="12,0">
-                    <TextBox
-                        x:Name="PageNumberBox"
-                        Width="64"
-                        PlaceholderText="#"
-                        KeyDown="PageNumberBox_KeyDown" />
-                    <TextBlock VerticalAlignment="Center" Text="{x:Bind ViewModel.PageLabel, Mode=OneWay}" />
+
+        <!-- Toolbar -->
+        <Border
+            Grid.Row="0"
+            Background="{ThemeResource LayerFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="0,0,0,1"
+            Padding="4,0">
+            <ScrollViewer
+                HorizontalScrollBarVisibility="Auto"
+                VerticalScrollBarVisibility="Hidden"
+                HorizontalScrollMode="Enabled"
+                VerticalScrollMode="Disabled">
+                <StackPanel
+                    Orientation="Horizontal"
+                    Spacing="2"
+                    VerticalAlignment="Center"
+                    Height="48">
+
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Command="{x:Bind ViewModel.OpenCommand}" ToolTipService.ToolTip="PDF Aç (Ctrl+O)">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE8B7;" FontSize="14" />
+                            <TextBlock Text="Aç" FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Command="{x:Bind ViewModel.CloseDocumentCommand}" ToolTipService.ToolTip="Kapat (Ctrl+W)">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE711;" FontSize="14" />
+                            <TextBlock Text="Kapat" FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <Rectangle Width="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" Margin="4,8" />
+
+                    <ToggleButton
+                        IsChecked="{x:Bind ViewModel.IsThumbnailsVisible, Mode=TwoWay}"
+                        ToolTipService.ToolTip="Küçük resimleri göster/gizle (Ctrl+B)"
+                        Style="{StaticResource ToolbarToggleButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE8A1;" FontSize="14" />
+                            <TextBlock Text="Küçük resimler" FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </ToggleButton>
+
+                    <Rectangle Width="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" Margin="4,8" />
+
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Command="{x:Bind ViewModel.FirstCommand}" ToolTipService.ToolTip="İlk sayfa (Home)">
+                        <FontIcon Glyph="&#xE892;" FontSize="14" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Command="{x:Bind ViewModel.PreviousCommand}" ToolTipService.ToolTip="Önceki sayfa (PageUp)">
+                        <FontIcon Glyph="&#xE76B;" FontSize="14" />
+                    </Button>
+
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="4,0">
+                        <TextBox
+                            x:Name="PageNumberBox"
+                            Width="48"
+                            Height="32"
+                            PlaceholderText="#"
+                            FontSize="12"
+                            VerticalAlignment="Center"
+                            KeyDown="PageNumberBox_KeyDown" />
+                        <TextBlock Text="{x:Bind ViewModel.PageLabel, Mode=OneWay}" VerticalAlignment="Center" FontSize="12" />
+                    </StackPanel>
+
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Command="{x:Bind ViewModel.NextCommand}" ToolTipService.ToolTip="Sonraki sayfa (PageDown)">
+                        <FontIcon Glyph="&#xE76C;" FontSize="14" />
+                    </Button>
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Command="{x:Bind ViewModel.LastCommand}" ToolTipService.ToolTip="Son sayfa (End)">
+                        <FontIcon Glyph="&#xE893;" FontSize="14" />
+                    </Button>
+
+                    <Rectangle Width="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" Margin="4,8" />
+
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Command="{x:Bind ViewModel.ZoomOutCommand}" ToolTipService.ToolTip="Uzaklaştır (Ctrl+-)">
+                        <FontIcon Glyph="&#xE71F;" FontSize="14" />
+                    </Button>
+
+                    <DropDownButton
+                        Content="{x:Bind ViewModel.ZoomPercentText, Mode=OneWay}"
+                        VerticalAlignment="Center"
+                        Margin="2,0"
+                        MinWidth="64"
+                        FontSize="12"
+                        ToolTipService.ToolTip="Yakınlaştırma seviyesi">
+                        <DropDownButton.Flyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Text="%50" Click="Zoom50_Click" />
+                                <MenuFlyoutItem Text="%75" Click="Zoom75_Click" />
+                                <MenuFlyoutItem Text="%100 (Gerçek Boyut)" Click="Zoom100_Click" />
+                                <MenuFlyoutItem Text="%125" Click="Zoom125_Click" />
+                                <MenuFlyoutItem Text="%150" Click="Zoom150_Click" />
+                                <MenuFlyoutItem Text="%200" Click="Zoom200_Click" />
+                                <MenuFlyoutItem Text="%300" Click="Zoom300_Click" />
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem Text="Genişliğe sığdır" Command="{x:Bind ViewModel.FitWidthCommand}" />
+                                <MenuFlyoutItem Text="Sayfaya sığdır" Command="{x:Bind ViewModel.FitPageCommand}" />
+                            </MenuFlyout>
+                        </DropDownButton.Flyout>
+                    </DropDownButton>
+
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Command="{x:Bind ViewModel.ZoomInCommand}" ToolTipService.ToolTip="Yakınlaştır (Ctrl++)">
+                        <FontIcon Glyph="&#xE8A3;" FontSize="14" />
+                    </Button>
+
+                    <Rectangle Width="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" Margin="4,8" />
+
+                    <ToggleButton
+                        IsChecked="{x:Bind ViewModel.IsTwoPageMode, Mode=TwoWay}"
+                        ToolTipService.ToolTip="İki sayfa yan yana"
+                        Style="{StaticResource ToolbarToggleButtonStyle}"
+                        Click="TwoPageToggle_Click">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE736;" FontSize="14" />
+                            <TextBlock Text="İki sayfa" FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </ToggleButton>
+
+                    <ToggleButton
+                        IsChecked="{x:Bind ViewModel.IsDarkMode, Mode=TwoWay}"
+                        ToolTipService.ToolTip="Gece modu"
+                        Style="{StaticResource ToolbarToggleButtonStyle}"
+                        Click="DarkModeToggle_Click">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE708;" FontSize="14" />
+                            <TextBlock Text="Gece modu" FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </ToggleButton>
+
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Click="FullScreen_Click" ToolTipService.ToolTip="Tam ekran (F11)">
+                        <FontIcon Glyph="&#xE740;" FontSize="14" />
+                    </Button>
+
+                    <Rectangle Width="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" Margin="4,8" />
+
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Command="{x:Bind ViewModel.ToggleSearchCommand}" ToolTipService.ToolTip="Metin ara (Ctrl+F)">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE721;" FontSize="14" />
+                            <TextBlock Text="Ara" FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Command="{x:Bind ViewModel.CopyPageTextCommand}" ToolTipService.ToolTip="Sayfa metnini kopyala (Ctrl+C)">
+                        <FontIcon Glyph="&#xE8C8;" FontSize="14" />
+                    </Button>
+
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Command="{x:Bind ViewModel.ShowPropertiesCommand}" ToolTipService.ToolTip="Belge özellikleri (Ctrl+D)">
+                        <FontIcon Glyph="&#xE946;" FontSize="14" />
+                    </Button>
+
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Command="{x:Bind ViewModel.PrintCommand}" ToolTipService.ToolTip="Yazdır (Ctrl+P)">
+                        <FontIcon Glyph="&#xE749;" FontSize="14" />
+                    </Button>
+
                 </StackPanel>
-            </AppBarElementContainer>
-        </CommandBar>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Main Content -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="160" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
+
+            <!-- Thumbnails Sidebar -->
             <ListView
+                x:Name="ThumbnailList"
+                Width="160"
                 ItemsSource="{x:Bind ViewModel.Thumbnails}"
+                SelectedIndex="{x:Bind ViewModel.PageIndex, Mode=TwoWay}"
                 IsItemClickEnabled="True"
                 ItemClick="Thumbnail_Click"
-                Visibility="{x:Bind ViewModel.HasDocument, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                Visibility="{x:Bind ViewModel.IsThumbnailsVisible, Mode=OneWay, Converter={StaticResource BoolToVis}}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="0,0,1,0">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="vm:PageItemViewModel">
-                        <StackPanel Spacing="4" Width="120">
-                            <Image Height="140" Source="{x:Bind Preview, Mode=OneWay}" Stretch="Uniform" />
-                            <TextBlock HorizontalAlignment="Center" Text="{x:Bind DisplayNumber}" />
+                        <StackPanel Spacing="4" Width="120" Padding="0,4">
+                            <Border BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4">
+                                <Image Height="140" Source="{x:Bind Preview, Mode=OneWay}" Stretch="Uniform" />
+                            </Border>
+                            <TextBlock HorizontalAlignment="Center" Text="{x:Bind DisplayNumber}" FontSize="12" Opacity="0.8" />
                         </StackPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
+
+            <!-- Continuous Scroll Viewport -->
             <ScrollViewer
+                x:Name="MainScrollViewer"
                 Grid.Column="1"
                 ZoomMode="Disabled"
                 HorizontalScrollBarVisibility="Auto"
@@ -64,23 +229,153 @@
                 HorizontalScrollMode="Enabled"
                 VerticalScrollMode="Enabled"
                 SizeChanged="Viewport_SizeChanged"
+                PointerWheelChanged="MainScrollViewer_PointerWheelChanged"
+                ViewChanged="MainScrollViewer_ViewChanged"
+                Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
                 Visibility="{x:Bind ViewModel.HasDocument, Mode=OneWay, Converter={StaticResource BoolToVis}}">
-                <Image
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Stretch="None"
-                    Source="{x:Bind ViewModel.CurrentPageImage, Mode=OneWay}" />
+
+                <ItemsControl
+                    x:Name="PageItemsControl"
+                    ItemsSource="{x:Bind ViewModel.RenderedPages, Mode=OneWay}"
+                    HorizontalAlignment="Center">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:RenderedPageViewModel">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8" Margin="16,8">
+                                    <Border
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="2">
+                                        <Image
+                                            Source="{x:Bind LeftImage, Mode=OneWay}"
+                                            Stretch="None"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Top" />
+                                    </Border>
+                                    <Border
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="2"
+                                        Visibility="{x:Bind HasRightPage, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                                        <Image
+                                            Source="{x:Bind RightImage, Mode=OneWay}"
+                                            Stretch="None"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Top" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock
+                                    Text="{x:Bind PageLabel, Mode=OneWay}"
+                                    HorizontalAlignment="Center"
+                                    FontSize="11"
+                                    Opacity="0.55"
+                                    Margin="0,0,0,8" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </ScrollViewer>
-            <StackPanel Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" Visibility="{x:Bind ViewModel.HasDocument, Mode=OneWay, Converter={StaticResource InverseBoolToVis}}">
-                <TextBlock Text="PDF dosyanızı buraya sürükleyin" HorizontalAlignment="Center" />
-                <Button Content="PDF Seç" Command="{x:Bind ViewModel.OpenCommand}" />
+
+            <!-- Search Overlay -->
+            <Border
+                Grid.Column="1"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Margin="0,12,24,0"
+                Padding="12,8"
+                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Visibility="{x:Bind ViewModel.IsSearchOpen, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <TextBox
+                        x:Name="SearchBox"
+                        Width="180"
+                        PlaceholderText="Metin ara..."
+                        Text="{x:Bind ViewModel.SearchQuery, Mode=TwoWay}"
+                        KeyDown="SearchBox_KeyDown" />
+                    <Button Content="Ara" Command="{x:Bind ViewModel.SearchCommand}" />
+                    <Button Command="{x:Bind ViewModel.SearchPrevCommand}" ToolTipService.ToolTip="Önceki (Shift+Enter)">
+                        <FontIcon Glyph="&#xE70E;" FontSize="12" />
+                    </Button>
+                    <Button Command="{x:Bind ViewModel.SearchNextCommand}" ToolTipService.ToolTip="Sonraki (Enter)">
+                        <FontIcon Glyph="&#xE70D;" FontSize="12" />
+                    </Button>
+                    <TextBlock Text="{x:Bind ViewModel.SearchStatusText, Mode=OneWay}" VerticalAlignment="Center" Opacity="0.8" Margin="4,0" FontSize="12" />
+                    <Button Command="{x:Bind ViewModel.ToggleSearchCommand}" ToolTipService.ToolTip="Kapat (Esc)">
+                        <FontIcon Glyph="&#xE711;" FontSize="12" />
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <!-- Empty State -->
+            <StackPanel
+                Grid.ColumnSpan="2"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Spacing="12"
+                Visibility="{x:Bind ViewModel.HasDocument, Mode=OneWay, Converter={StaticResource InverseBoolToVis}}">
+                <FontIcon Glyph="&#xE8A5;" FontSize="48" Opacity="0.6" HorizontalAlignment="Center" />
+                <TextBlock Text="PDF dosyanızı buraya sürükleyin" Style="{StaticResource SubtitleTextBlockStyle}" HorizontalAlignment="Center" />
+                <Button Content="PDF Seç" Command="{x:Bind ViewModel.OpenCommand}" HorizontalAlignment="Center" Style="{StaticResource AccentButtonStyle}" />
             </StackPanel>
         </Grid>
+
+        <!-- Document Properties Dialog -->
+        <ContentDialog
+            x:Name="PropertiesDialog"
+            Title="Belge Özellikleri"
+            CloseButtonText="Kapat"
+            DefaultButton="Close">
+            <StackPanel Spacing="10" MinWidth="340">
+                <Grid ColumnSpacing="12" RowSpacing="6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Dosya:" FontWeight="SemiBold" />
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind ViewModel.DocumentProperties.FileName, Mode=OneWay}" TextWrapping="Wrap" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Sayfa Sayısı:" FontWeight="SemiBold" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind ViewModel.DocumentProperties.PageCount, Mode=OneWay}" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Başlık:" FontWeight="SemiBold" />
+                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{x:Bind ViewModel.DocumentProperties.Title, Mode=OneWay, TargetNullValue='Belirtilmemiş'}" />
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Yazar:" FontWeight="SemiBold" />
+                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{x:Bind ViewModel.DocumentProperties.Author, Mode=OneWay, TargetNullValue='Belirtilmemiş'}" />
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Konu:" FontWeight="SemiBold" />
+                    <TextBlock Grid.Row="4" Grid.Column="1" Text="{x:Bind ViewModel.DocumentProperties.Subject, Mode=OneWay, TargetNullValue='Belirtilmemiş'}" />
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Oluşturan:" FontWeight="SemiBold" />
+                    <TextBlock Grid.Row="5" Grid.Column="1" Text="{x:Bind ViewModel.DocumentProperties.Creator, Mode=OneWay, TargetNullValue='Belirtilmemiş'}" />
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="Tarih:" FontWeight="SemiBold" />
+                    <TextBlock Grid.Row="6" Grid.Column="1" Text="{x:Bind ViewModel.DocumentProperties.CreationDate, Mode=OneWay, TargetNullValue='Belirtilmemiş'}" />
+                    <TextBlock Grid.Row="7" Grid.Column="0" Text="Sayfa Boyutu:" FontWeight="SemiBold" />
+                    <TextBlock Grid.Row="7" Grid.Column="1" Text="{x:Bind ViewModel.DocumentProperties.PageWidthPoints, Mode=OneWay}" />
+                </Grid>
+            </StackPanel>
+        </ContentDialog>
+
         <InfoBar
             Grid.Row="1"
             VerticalAlignment="Top"
             IsOpen="{x:Bind ViewModel.IsErrorOpen, Mode=TwoWay}"
             Severity="Error"
             Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" />
+
+        <InfoBar
+            Grid.Row="1"
+            VerticalAlignment="Top"
+            IsOpen="{x:Bind ViewModel.IsSuccessOpen, Mode=TwoWay}"
+            Severity="Success"
+            Message="{x:Bind ViewModel.SuccessMessage, Mode=OneWay}" />
     </Grid>
 </Page>

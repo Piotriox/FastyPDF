@@ -62,6 +62,7 @@ public partial class App : Application
         services.AddSingleton<PdfiumRuntime>();
         services.AddSingleton<IPdfDocumentService, PdfiumDocumentService>();
         services.AddSingleton<IPdfRenderService, PdfiumRenderService>();
+        services.AddSingleton<IPdfTextService, PdfiumTextService>();
         services.AddSingleton<IPdfManipulationService, PdfSharpManipulationService>();
         services.AddSingleton<IImageService, WicImageService>();
         services.AddSingleton<IImageEncoder, WicImageEncoder>();

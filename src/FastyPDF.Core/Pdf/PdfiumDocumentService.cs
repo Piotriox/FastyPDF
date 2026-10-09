@@ -33,12 +33,43 @@ public sealed class PdfiumDocumentService : IPdfDocumentService
                     }
 
                     var file = new FileInfo(path);
+                    double width = 0;
+                    double height = 0;
+                    fpdfview.FPDF_GetPageSizeByIndex(document, 0, ref width, ref height);
+
+                    string? title = null, author = null, subject = null, creator = null, producer = null, creationDate = null;
+                    try
+                    {
+                        using var pdfDoc = PdfSharp.Pdf.IO.PdfReader.Open(path, PdfSharp.Pdf.IO.PdfDocumentOpenMode.Import);
+                        title = string.IsNullOrWhiteSpace(pdfDoc.Info.Title) ? null : pdfDoc.Info.Title;
+                        author = string.IsNullOrWhiteSpace(pdfDoc.Info.Author) ? null : pdfDoc.Info.Author;
+                        subject = string.IsNullOrWhiteSpace(pdfDoc.Info.Subject) ? null : pdfDoc.Info.Subject;
+                        creator = string.IsNullOrWhiteSpace(pdfDoc.Info.Creator) ? null : pdfDoc.Info.Creator;
+                        producer = string.IsNullOrWhiteSpace(pdfDoc.Info.Producer) ? null : pdfDoc.Info.Producer;
+                        if (pdfDoc.Info.CreationDate != DateTime.MinValue)
+                        {
+                            creationDate = pdfDoc.Info.CreationDate.ToString("yyyy-MM-dd HH:mm");
+                        }
+                    }
+                    catch
+                    {
+                        // Metadata extraction failure is non-fatal
+                    }
+
                     return new PdfDocumentInfo
                     {
                         Path = path,
                         FileName = file.Name,
                         PageCount = count,
-                        FileSizeBytes = file.Length
+                        FileSizeBytes = file.Length,
+                        Title = title,
+                        Author = author,
+                        Subject = subject,
+                        Creator = creator,
+                        Producer = producer,
+                        CreationDate = creationDate,
+                        PageWidthPoints = width,
+                        PageHeightPoints = height
                     };
                 }
                 finally

@@ -53,12 +53,19 @@ public sealed class RecentFilesService : IRecentFilesService
         }
 
         var full = Path.GetFullPath(path);
-        _items.RemoveAll(item => string.Equals(item.Path, full, StringComparison.OrdinalIgnoreCase));
+        var existingIndex = _items.FindIndex(item => string.Equals(item.Path, full, StringComparison.OrdinalIgnoreCase));
+        var lastPage = existingIndex >= 0 ? _items[existingIndex].LastPageIndex : 0;
+        if (existingIndex >= 0)
+        {
+            _items.RemoveAt(existingIndex);
+        }
+
         _items.Insert(0, new RecentFileEntry
         {
             Path = full,
             DisplayName = Path.GetFileName(full),
-            LastUsedUtc = DateTimeOffset.UtcNow
+            LastUsedUtc = DateTimeOffset.UtcNow,
+            LastPageIndex = lastPage
         });
 
         var limit = Math.Max(1, _settings.Current.RecentFileLimit);
@@ -68,6 +75,34 @@ public sealed class RecentFilesService : IRecentFilesService
         }
 
         await PersistAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task UpdateLastPageAsync(string path, int pageIndex, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        var full = Path.GetFullPath(path);
+        var item = _items.FirstOrDefault(x => string.Equals(x.Path, full, StringComparison.OrdinalIgnoreCase));
+        if (item != null)
+        {
+            item.LastPageIndex = pageIndex;
+            await PersistAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    public int GetLastPage(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return 0;
+        }
+
+        var full = Path.GetFullPath(path);
+        var item = _items.FirstOrDefault(x => string.Equals(x.Path, full, StringComparison.OrdinalIgnoreCase));
+        return item?.LastPageIndex ?? 0;
     }
 
     public async Task ClearAsync(CancellationToken cancellationToken = default)

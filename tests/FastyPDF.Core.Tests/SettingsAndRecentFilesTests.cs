@@ -75,4 +75,28 @@ public class SettingsAndRecentFilesTests
             File.Delete(tempFile);
         }
     }
+
+    [Fact]
+    public async Task RecentFilesService_UpdatesAndRemembersLastPage()
+    {
+        var tempFile = Path.GetTempFileName();
+        try
+        {
+            var service = new RecentFilesService(new StubSettingsService(), new NullLog());
+            await service.AddAsync(tempFile);
+
+            Assert.Equal(0, service.GetLastPage(tempFile));
+
+            await service.UpdateLastPageAsync(tempFile, 42);
+            Assert.Equal(42, service.GetLastPage(tempFile));
+
+            // Adding same file again preserves last read page
+            await service.AddAsync(tempFile);
+            Assert.Equal(42, service.GetLastPage(tempFile));
+        }
+        finally
+        {
+            File.Delete(tempFile);
+        }
+    }
 }

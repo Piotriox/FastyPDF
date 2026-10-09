@@ -11,6 +11,22 @@ public sealed class PdfDocumentInfo
     public bool IsEncrypted { get; init; }
 
     public long FileSizeBytes { get; init; }
+
+    public string? Title { get; init; }
+
+    public string? Author { get; init; }
+
+    public string? Subject { get; init; }
+
+    public string? Creator { get; init; }
+
+    public string? Producer { get; init; }
+
+    public string? CreationDate { get; init; }
+
+    public double PageWidthPoints { get; init; }
+
+    public double PageHeightPoints { get; init; }
 }
 
 public sealed record PageRange(int StartPage, int EndPage)
@@ -50,6 +66,8 @@ public sealed class RecentFileEntry
     public required string DisplayName { get; init; }
 
     public DateTimeOffset LastUsedUtc { get; init; }
+
+    public int LastPageIndex { get; set; }
 }
 
 public sealed class ImageInput
