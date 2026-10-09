@@ -12,7 +12,7 @@
   <Identity
     Name="0732BCAF-AC0D-4F10-8F85-D2544F2EFB78"
     Publisher="CN=FastyPDF"
-    Version="1.0.2.0" />
+    Version="1.1.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="0732BCAF-AC0D-4F10-8F85-D2544F2EFB78" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 

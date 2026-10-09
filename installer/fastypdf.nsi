@@ -10,7 +10,7 @@
 ; General Definitions
 ; ------------------------------------------------------------------------------
 !define APP_NAME "FastyPDF"
-!define APP_VERSION "1.0.2"
+!define APP_VERSION "1.1.0"
 !define APP_PUBLISHER "FastyPDF"
 !define APP_EXE "FastyPDF.exe"
 !define APP_ICON "..\src\FastyPDF\Assets\AppIcon.ico"
