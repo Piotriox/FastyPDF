@@ -18,6 +18,7 @@ public partial class PdfToImageViewModel : ToolViewModelBase
     private readonly IRecentFilesService _recent;
     private readonly PickerService _pickers;
     private readonly INavigationService _navigation;
+    private readonly IAppLog _log;
     private CancellationTokenSource? _loadCts;
     private CancellationTokenSource? _workCts;
 
@@ -29,7 +30,8 @@ public partial class PdfToImageViewModel : ToolViewModelBase
         ISettingsService settings,
         IRecentFilesService recent,
         PickerService pickers,
-        INavigationService navigation)
+        INavigationService navigation,
+        IAppLog log)
     {
         _documents = documents;
         _render = render;
@@ -39,6 +41,7 @@ public partial class PdfToImageViewModel : ToolViewModelBase
         _recent = recent;
         _pickers = pickers;
         _navigation = navigation;
+        _log = log;
         Formats = ["PNG", "JPEG"];
         SelectedFormat = "PNG";
     }
@@ -146,7 +149,7 @@ public partial class PdfToImageViewModel : ToolViewModelBase
 
         _workCts = new CancellationTokenSource();
         IsBusy = true;
-        var extension = SelectedFormat.Equals("JPEG", StringComparison.OrdinalIgnoreCase) ? "jpg" : "png";
+        var extension = string.Equals(SelectedFormat, "JPEG", StringComparison.OrdinalIgnoreCase) ? "jpg" : "png";
         try
         {
             for (var i = 0; i < indices.Count; i++)
@@ -164,8 +167,13 @@ public partial class PdfToImageViewModel : ToolViewModelBase
 
             ShowSuccess("Görseller başarıyla oluşturuldu.");
         }
+        catch (OperationCanceledException)
+        {
+            ClearMessages();
+        }
         catch (Exception ex)
         {
+            _log.Error("PDF to Image export failed", ex);
             ShowError(ex);
         }
         finally

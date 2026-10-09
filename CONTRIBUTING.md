@@ -1,6 +1,6 @@
-# Contributing
+# Contributing to FastyPDF
 
-Keep changes small, local-first, and focused on the existing PDF tools.
+Thank you for your interest in contributing! Please keep changes small, focused, and aligned with our offline-first and privacy-focused principles.
 
 ## Setup
 
@@ -8,10 +8,10 @@ Keep changes small, local-first, and focused on the existing PDF tools.
 2. Clone the repository.
 3. Restore and build with x64:
 
-```
-dotnet restore
-dotnet build src/FastyPDF/FastyPDF.csproj -c Debug -p:Platform=x64
-```
+   ```
+   dotnet restore
+   dotnet build src/FastyPDF/FastyPDF.csproj -c Debug -p:Platform=x64
+   ```
 
 ## Guidelines
 
@@ -19,11 +19,16 @@ dotnet build src/FastyPDF/FastyPDF.csproj -c Debug -p:Platform=x64
 - Keep UI in WinUI 3 / XAML. Do not add a WebView-based interface.
 - Do not send user files to a network service.
 - Prefer a new service, view model, and page when adding a tool.
-- Do not add OCR, e-signature, cloud accounts, or AI features unless that is the agreed scope.
 - Match the existing naming, MVVM layout, and error handling.
 
-## Pull requests
+## Submitting Pull Requests
 
-- Describe what changed and why.
-- Confirm the x64 build succeeds.
-- Do not commit `bin/`, `obj/`, or user-specific files. Use the root `.gitignore` only.
+1. Make sure all unit tests pass:
+   ```bash
+   dotnet test
+   ```
+2. Verify the application builds with 0 warnings:
+   ```bash
+   dotnet build src/FastyPDF/FastyPDF.csproj -c Release -p:Platform=x64
+   ```
+3. Submit a pull request describing the problem solved and changes made.

@@ -51,7 +51,7 @@ public abstract partial class ToolViewModelBase : ObservableObject
     {
         var message = exception is PdfOperationException pdf
             ? pdf.UserMessage
-            : "Beklenmeyen bir hata oluştu.";
+            : (!string.IsNullOrWhiteSpace(exception.Message) ? exception.Message : "Beklenmeyen bir hata oluştu.");
         ErrorMessage = message;
         IsErrorOpen = true;
         IsSuccessOpen = false;

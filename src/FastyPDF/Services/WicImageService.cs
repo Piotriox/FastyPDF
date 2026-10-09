@@ -28,8 +28,8 @@ public sealed class WicImageService : IImageService
 
         try
         {
-            var file = await StorageFile.GetFileFromPathAsync(path);
-            using var stream = await file.OpenReadAsync();
+            using var fileStream = File.OpenRead(path);
+            using var stream = fileStream.AsRandomAccessStream();
             var decoder = await BitmapDecoder.CreateAsync(stream);
             var softwareBitmap = await decoder.GetSoftwareBitmapAsync(
                 BitmapPixelFormat.Bgra8,
