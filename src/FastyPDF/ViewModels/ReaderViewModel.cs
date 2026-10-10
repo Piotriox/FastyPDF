@@ -17,6 +17,8 @@ public partial class RenderedPageViewModel : ObservableObject
     [ObservableProperty] private ImageSource? _rightImage;
     [ObservableProperty] private bool _hasRightPage;
     [ObservableProperty] private string _pageLabel = string.Empty;
+    [ObservableProperty] private double _pageWidth = 595;
+    [ObservableProperty] private double _pageHeight = 842;
     public bool IsRendered { get; set; }
 }
 
@@ -217,6 +219,27 @@ public partial class ReaderViewModel : ToolViewModelBase
         return CancelAndRebuildAsync();
     }
 
+    public void AdjustZoomImmediate(double delta)
+    {
+        var newZoom = Math.Clamp(Zoom + delta, 0.25, 4.0);
+        if (Math.Abs(newZoom - Zoom) < 0.001) return;
+        Zoom = newZoom;
+        UpdatePageDisplayDimensions();
+    }
+
+    public void UpdatePageDisplayDimensions()
+    {
+        var w = _pageWidthPoints * Zoom;
+        var h = _pageHeightPoints * Zoom;
+        foreach (var p in RenderedPages)
+        {
+            p.PageWidth = w;
+            p.PageHeight = h;
+        }
+    }
+
+    public Task ApplyZoomAsync() => CancelAndRebuildAsync();
+
     private Task CancelAndRebuildAsync()
     {
         _renderCts?.Cancel();
@@ -367,38 +390,6 @@ public partial class ReaderViewModel : ToolViewModelBase
     {
         if (string.IsNullOrEmpty(SourcePath) || PageCount == 0) return;
 
-        App.DispatcherQueue.TryEnqueue(() =>
-        {
-            RenderedPages.Clear();
-            if (IsTwoPageMode)
-            {
-                for (var i = 0; i < PageCount; i += 2)
-                {
-                    var hasRight = i + 1 < PageCount;
-                    RenderedPages.Add(new RenderedPageViewModel
-                    {
-                        LeftPageIndex = i,
-                        HasRightPage = hasRight,
-                        PageLabel = hasRight ? $"{i + 1} – {i + 2}" : $"{i + 1}"
-                    });
-                }
-            }
-            else
-            {
-                for (var i = 0; i < PageCount; i++)
-                {
-                    RenderedPages.Add(new RenderedPageViewModel
-                    {
-                        LeftPageIndex = i,
-                        HasRightPage = false,
-                        PageLabel = $"{i + 1}"
-                    });
-                }
-            }
-        });
-
-        await Task.Delay(50, cancellationToken).ContinueWith(_ => { });
-
         try
         {
             var size = await _render.GetPageSizeAsync(SourcePath, 0, cancellationToken);
@@ -406,6 +397,58 @@ public partial class ReaderViewModel : ToolViewModelBase
             _pageHeightPoints = size.HeightPoints;
         }
         catch { }
+
+        var w = _pageWidthPoints * Zoom;
+        var h = _pageHeightPoints * Zoom;
+        int expectedCount = IsTwoPageMode ? (PageCount + 1) / 2 : PageCount;
+        bool needsRebuild = RenderedPages.Count != expectedCount;
+
+        if (needsRebuild)
+        {
+            App.DispatcherQueue.TryEnqueue(() =>
+            {
+                RenderedPages.Clear();
+                if (IsTwoPageMode)
+                {
+                    for (var i = 0; i < PageCount; i += 2)
+                    {
+                        var hasRight = i + 1 < PageCount;
+                        RenderedPages.Add(new RenderedPageViewModel
+                        {
+                            LeftPageIndex = i,
+                            HasRightPage = hasRight,
+                            PageLabel = hasRight ? $"{i + 1} – {i + 2}" : $"{i + 1}",
+                            PageWidth = w,
+                            PageHeight = h
+                        });
+                    }
+                }
+                else
+                {
+                    for (var i = 0; i < PageCount; i++)
+                    {
+                        RenderedPages.Add(new RenderedPageViewModel
+                        {
+                            LeftPageIndex = i,
+                            HasRightPage = false,
+                            PageLabel = $"{i + 1}",
+                            PageWidth = w,
+                            PageHeight = h
+                        });
+                    }
+                }
+            });
+
+            await Task.Delay(50, cancellationToken).ContinueWith(_ => { });
+        }
+        else
+        {
+            UpdatePageDisplayDimensions();
+            foreach (var p in RenderedPages)
+            {
+                p.IsRendered = false;
+            }
+        }
 
         await RenderVisiblePagesAsync(cancellationToken);
     }
@@ -432,11 +475,13 @@ public partial class ReaderViewModel : ToolViewModelBase
             }
         }
 
-        var startRow = Math.Max(0, currentRowIndex - RenderWindow);
-        var endRow = Math.Min(rowList.Count - 1, currentRowIndex + RenderWindow);
+        int effectiveWindow = Zoom > 1.4 ? 1 : RenderWindow;
+        var startRow = Math.Max(0, currentRowIndex - effectiveWindow);
+        var endRow = Math.Min(rowList.Count - 1, currentRowIndex + effectiveWindow);
 
-        var gate = new SemaphoreSlim(3);
+        var gate = new SemaphoreSlim(2);
         var tasks = new List<Task>();
+        var currentZoom = (float)Zoom;
 
         for (var ri = startRow; ri <= endRow; ri++)
         {
@@ -450,18 +495,52 @@ public partial class ReaderViewModel : ToolViewModelBase
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    using var leftImg = await _render.RenderPageAsync(SourcePath, row.LeftPageIndex, (float)Zoom, cancellationToken);
-                    var leftBmp = BitmapConversion.ToWriteableBitmap(leftImg, IsDarkMode);
-                    App.DispatcherQueue.TryEnqueue(() => row.LeftImage = leftBmp);
-
+                    var leftImg = await _render.RenderPageAsync(SourcePath, row.LeftPageIndex, currentZoom, cancellationToken);
+                    BgraImage? rightImg = null;
                     if (row.HasRightPage)
                     {
-                        using var rightImg = await _render.RenderPageAsync(SourcePath, row.LeftPageIndex + 1, (float)Zoom, cancellationToken);
-                        var rightBmp = BitmapConversion.ToWriteableBitmap(rightImg, IsDarkMode);
-                        App.DispatcherQueue.TryEnqueue(() => row.RightImage = rightBmp);
+                        rightImg = await _render.RenderPageAsync(SourcePath, row.LeftPageIndex + 1, currentZoom, cancellationToken);
                     }
 
-                    row.IsRendered = true;
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        leftImg.Dispose();
+                        rightImg?.Dispose();
+                        return;
+                    }
+
+                    var tcs = new TaskCompletionSource();
+                    var enqueued = App.DispatcherQueue.TryEnqueue(() =>
+                    {
+                        try
+                        {
+                            row.LeftImage = BitmapConversion.ToWriteableBitmap(leftImg, IsDarkMode);
+                            if (rightImg != null)
+                            {
+                                row.RightImage = BitmapConversion.ToWriteableBitmap(rightImg, IsDarkMode);
+                            }
+                            row.IsRendered = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            _log.Error($"Failed setting bitmaps for row {row.LeftPageIndex}", ex);
+                        }
+                        finally
+                        {
+                            leftImg.Dispose();
+                            rightImg?.Dispose();
+                            tcs.TrySetResult();
+                        }
+                    });
+
+                    if (!enqueued)
+                    {
+                        leftImg.Dispose();
+                        rightImg?.Dispose();
+                        tcs.TrySetResult();
+                    }
+
+                    await tcs.Task.WaitAsync(cancellationToken);
                 }
                 catch (OperationCanceledException) { }
                 catch (Exception ex)
@@ -488,11 +567,18 @@ public partial class ReaderViewModel : ToolViewModelBase
             {
                 try
                 {
-                    using var image = await _render.RenderThumbnailAsync(SourcePath!, page.PageIndex, 100, cancellationToken);
+                    var image = await _render.RenderThumbnailAsync(SourcePath!, page.PageIndex, 100, cancellationToken);
                     App.DispatcherQueue.TryEnqueue(() =>
                     {
-                        page.Preview = BitmapConversion.ToWriteableBitmap(image);
-                        page.IsLoading = false;
+                        try
+                        {
+                            page.Preview = BitmapConversion.ToWriteableBitmap(image);
+                        }
+                        finally
+                        {
+                            image.Dispose();
+                            page.IsLoading = false;
+                        }
                     });
                 }
                 catch

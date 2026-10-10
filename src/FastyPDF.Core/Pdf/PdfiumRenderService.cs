@@ -88,6 +88,14 @@ public sealed class PdfiumRenderService : IPdfRenderService
                     var width = Math.Max(1, (int)Math.Round(widthPts * scale));
                     var height = Math.Max(1, (int)Math.Round(heightPts * scale));
 
+                    const int maxDimension = 4096;
+                    if (width > maxDimension || height > maxDimension)
+                    {
+                        var factor = Math.Min((float)maxDimension / width, (float)maxDimension / height);
+                        width = Math.Max(1, (int)Math.Round(width * factor));
+                        height = Math.Max(1, (int)Math.Round(height * factor));
+                    }
+
                     bitmap = fpdfview.FPDFBitmapCreateEx(width, height, (int)FPDFBitmapFormat.BGRA, IntPtr.Zero, 0);
                     if (bitmap is null)
                     {

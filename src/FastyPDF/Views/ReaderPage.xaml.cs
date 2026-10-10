@@ -17,8 +17,6 @@ public sealed partial class ReaderPage : Page
 {
     public ReaderViewModel ViewModel { get; }
 
-    private bool _suppressViewChangedPageSync;
-
     public ReaderPage()
     {
         ViewModel = App.Services.GetRequiredService<ReaderViewModel>();
@@ -55,7 +53,8 @@ public sealed partial class ReaderPage : Page
             switch (args.PropertyName)
             {
                 case nameof(ViewModel.PageIndex):
-                    SyncScrollToCurrentPage();
+                    if (!_isSyncingFromScroll)
+                        SyncScrollToCurrentPage();
                     if (ViewModel.PageIndex >= 0 && ViewModel.PageIndex < ThumbnailList.Items.Count)
                         ThumbnailList.ScrollIntoView(ThumbnailList.Items[ViewModel.PageIndex]);
                     break;
@@ -83,29 +82,48 @@ public sealed partial class ReaderPage : Page
             await ViewModel.LoadAsync(path);
     }
 
+    private bool _isSyncingFromScroll;
+    private bool _isProgrammaticScroll;
+    private bool _isZooming;
+
     private void MainScrollViewer_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
     {
-        if (_suppressViewChangedPageSync || e.IsIntermediate) return;
+        if (_isZooming) return;
+
+        if (_isProgrammaticScroll)
+        {
+            if (!e.IsIntermediate)
+                _isProgrammaticScroll = false;
+            return;
+        }
+
+        if (e.IsIntermediate) return;
 
         var sv = MainScrollViewer;
         var containerH = sv.ExtentHeight;
         if (containerH <= 0 || ViewModel.RenderedPages.Count == 0) return;
 
         var rowH = containerH / ViewModel.RenderedPages.Count;
-        var rowIndex = Math.Clamp((int)(sv.VerticalOffset / Math.Max(rowH, 1)), 0, ViewModel.RenderedPages.Count - 1);
+        var rowIndex = Math.Clamp((int)Math.Round(sv.VerticalOffset / Math.Max(rowH, 1)), 0, ViewModel.RenderedPages.Count - 1);
 
         var row = ViewModel.RenderedPages[rowIndex];
         if (row.LeftPageIndex != ViewModel.PageIndex)
         {
-            _suppressViewChangedPageSync = true;
-            _ = ViewModel.GoToAsync(row.LeftPageIndex);
-            _suppressViewChangedPageSync = false;
+            _isSyncingFromScroll = true;
+            try
+            {
+                _ = ViewModel.GoToAsync(row.LeftPageIndex);
+            }
+            finally
+            {
+                _isSyncingFromScroll = false;
+            }
         }
     }
 
     private void SyncScrollToCurrentPage()
     {
-        if (_suppressViewChangedPageSync || ViewModel.RenderedPages.Count == 0) return;
+        if (_isSyncingFromScroll || _isZooming || ViewModel.RenderedPages.Count == 0) return;
 
         int rowIndex = -1;
         for (int i = 0; i < ViewModel.RenderedPages.Count; i++)
@@ -125,10 +143,11 @@ public sealed partial class ReaderPage : Page
         if (containerH <= 0) return;
 
         var rowH = containerH / ViewModel.RenderedPages.Count;
-        _suppressViewChangedPageSync = true;
+        _isProgrammaticScroll = true;
         MainScrollViewer.ChangeView(null, rowIndex * rowH, null, true);
-        _suppressViewChangedPageSync = false;
     }
+
+    private DispatcherTimer? _zoomDebounceTimer;
 
     private void MainScrollViewer_PointerWheelChanged(object sender, PointerRoutedEventArgs e)
     {
@@ -140,10 +159,33 @@ public sealed partial class ReaderPage : Page
         if (!ctrlDown) return;
 
         e.Handled = true;
-        if (properties.MouseWheelDelta > 0)
-            ViewModel.ZoomInCommand.Execute(null);
-        else if (properties.MouseWheelDelta < 0)
-            ViewModel.ZoomOutCommand.Execute(null);
+        var delta = properties.MouseWheelDelta;
+        if (delta == 0) return;
+
+        _isZooming = true;
+        double step = delta > 0 ? 0.15 : -0.15;
+        ViewModel.AdjustZoomImmediate(step);
+
+        if (_zoomDebounceTimer == null)
+        {
+            _zoomDebounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
+            _zoomDebounceTimer.Tick += async (_, _) =>
+            {
+                _zoomDebounceTimer.Stop();
+                try
+                {
+                    await ViewModel.ApplyZoomAsync();
+                    SyncScrollToCurrentPage();
+                }
+                finally
+                {
+                    _isZooming = false;
+                }
+            };
+        }
+
+        _zoomDebounceTimer.Stop();
+        _zoomDebounceTimer.Start();
     }
 
     private async void DarkModeToggle_Click(object sender, RoutedEventArgs e)

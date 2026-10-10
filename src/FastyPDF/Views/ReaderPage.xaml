@@ -243,25 +243,31 @@
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8" Margin="16,8">
                                     <Border
+                                        Width="{x:Bind PageWidth, Mode=OneWay}"
+                                        Height="{x:Bind PageHeight, Mode=OneWay}"
+                                        Background="{ThemeResource LayerFillColorDefaultBrush}"
                                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                         BorderThickness="1"
                                         CornerRadius="2">
                                         <Image
                                             Source="{x:Bind LeftImage, Mode=OneWay}"
-                                            Stretch="None"
+                                            Stretch="Uniform"
                                             HorizontalAlignment="Center"
-                                            VerticalAlignment="Top" />
+                                            VerticalAlignment="Center" />
                                     </Border>
                                     <Border
+                                        Width="{x:Bind PageWidth, Mode=OneWay}"
+                                        Height="{x:Bind PageHeight, Mode=OneWay}"
+                                        Background="{ThemeResource LayerFillColorDefaultBrush}"
                                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                         BorderThickness="1"
                                         CornerRadius="2"
                                         Visibility="{x:Bind HasRightPage, Mode=OneWay, Converter={StaticResource BoolToVis}}">
                                         <Image
                                             Source="{x:Bind RightImage, Mode=OneWay}"
-                                            Stretch="None"
+                                            Stretch="Uniform"
                                             HorizontalAlignment="Center"
-                                            VerticalAlignment="Top" />
+                                            VerticalAlignment="Center" />
                                     </Border>
                                 </StackPanel>
                                 <TextBlock
