@@ -19,7 +19,7 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <NoWarn>$(NoWarn);MVVMTK0045</NoWarn>
   </PropertyGroup>
 
