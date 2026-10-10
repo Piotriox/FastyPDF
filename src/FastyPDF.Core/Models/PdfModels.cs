@@ -1,3 +1,5 @@
+using System.Buffers;
+
 namespace FastyPDF.Core.Models;
 
 public sealed class PdfDocumentInfo
@@ -41,7 +43,7 @@ public sealed class ProgressUpdate
     public double? Percent { get; init; }
 }
 
-public sealed class BgraImage
+public sealed class BgraImage : IDisposable
 {
     public required int Width { get; init; }
 
@@ -50,6 +52,22 @@ public sealed class BgraImage
     public required int Stride { get; init; }
 
     public required byte[] Pixels { get; init; }
+
+    public int PixelByteCount => Stride * Height;
+
+    public bool IsPooled { get; init; }
+
+    private bool _disposed;
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        if (IsPooled)
+        {
+            ArrayPool<byte>.Shared.Return(Pixels);
+        }
+    }
 }
 
 public sealed class PageSize

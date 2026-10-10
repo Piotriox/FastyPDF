@@ -68,7 +68,7 @@ public sealed class PdfiumTextService : IPdfTextService
                 }
                 finally
                 {
-                    fpdfview.FPDF_CloseDocument(doc);
+                    _runtime.CloseDocument(doc);
                 }
             }, cancellationToken).ConfigureAwait(false);
         }
@@ -150,7 +150,7 @@ public sealed class PdfiumTextService : IPdfTextService
                 }
                 finally
                 {
-                    fpdfview.FPDF_CloseDocument(doc);
+                    _runtime.CloseDocument(doc);
                 }
             }, cancellationToken).ConfigureAwait(false);
         }

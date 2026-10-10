@@ -9,23 +9,20 @@ public static class BitmapConversion
     public static WriteableBitmap ToWriteableBitmap(BgraImage image, bool invertColors = false)
     {
         var bitmap = new WriteableBitmap(image.Width, image.Height);
+        var byteCount = image.PixelByteCount;
         using var stream = bitmap.PixelBuffer.AsStream();
-        if (!invertColors)
+        if (invertColors)
         {
-            stream.Write(image.Pixels, 0, image.Pixels.Length);
-        }
-        else
-        {
-            var inverted = new byte[image.Pixels.Length];
-            for (var i = 0; i < image.Pixels.Length; i += 4)
+            var pixels = image.Pixels;
+            for (var i = 0; i < byteCount; i += 4)
             {
-                inverted[i] = (byte)(255 - image.Pixels[i]);         // B
-                inverted[i + 1] = (byte)(255 - image.Pixels[i + 1]); // G
-                inverted[i + 2] = (byte)(255 - image.Pixels[i + 2]); // R
-                inverted[i + 3] = image.Pixels[i + 3];               // A
+                pixels[i] = (byte)(255 - pixels[i]);         // B
+                pixels[i + 1] = (byte)(255 - pixels[i + 1]); // G
+                pixels[i + 2] = (byte)(255 - pixels[i + 2]); // R
+                // Alpha stays unchanged
             }
-            stream.Write(inverted, 0, inverted.Length);
         }
+        stream.Write(image.Pixels, 0, byteCount);
         bitmap.Invalidate();
         return bitmap;
     }

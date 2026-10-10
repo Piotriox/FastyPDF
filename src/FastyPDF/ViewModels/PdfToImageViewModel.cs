@@ -163,6 +163,7 @@ public partial class PdfToImageViewModel : ToolViewModelBase
                 var name = _files.BuildPageImageFileName(pageIndex + 1, extension);
                 var output = _files.GetUniqueFilePath(folder, name);
                 await _encoder.EncodeAsync(image, output, extension, _settings.Current.JpegQuality, _workCts.Token);
+                image.Dispose();
             }
 
             ShowSuccess("Görseller başarıyla oluşturuldu.");
@@ -200,7 +201,7 @@ public partial class PdfToImageViewModel : ToolViewModelBase
             {
                 try
                 {
-                    var image = await _render.RenderThumbnailAsync(SourcePath!, page.PageIndex, _settings.Current.ThumbnailWidth, cancellationToken);
+                    using var image = await _render.RenderThumbnailAsync(SourcePath!, page.PageIndex, _settings.Current.ThumbnailWidth, cancellationToken);
                     App.DispatcherQueue.TryEnqueue(() =>
                     {
                         page.Preview = BitmapConversion.ToWriteableBitmap(image);

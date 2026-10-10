@@ -74,7 +74,7 @@ public sealed class PdfiumDocumentService : IPdfDocumentService
                 }
                 finally
                 {
-                    fpdfview.FPDF_CloseDocument(document);
+                    _runtime.CloseDocument(document);
                 }
             }, cancellationToken).ConfigureAwait(false);
         }

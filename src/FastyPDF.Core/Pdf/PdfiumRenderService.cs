@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Runtime.InteropServices;
 using FastyPDF.Core.Abstractions;
 using FastyPDF.Core.Exceptions;
@@ -40,7 +41,7 @@ public sealed class PdfiumRenderService : IPdfRenderService
                 }
                 finally
                 {
-                    fpdfview.FPDF_CloseDocument(document);
+                    _runtime.CloseDocument(document);
                 }
             }, cancellationToken).ConfigureAwait(false);
         }
@@ -99,10 +100,11 @@ public sealed class PdfiumRenderService : IPdfRenderService
                     var stride = fpdfview.FPDFBitmapGetStride(bitmap);
                     var buffer = fpdfview.FPDFBitmapGetBuffer(bitmap);
                     var packedStride = width * 4;
-                    var pixels = new byte[packedStride * height];
+                    var byteCount = packedStride * height;
+                    var pixels = ArrayPool<byte>.Shared.Rent(byteCount);
                     if (stride == packedStride)
                     {
-                        Marshal.Copy(buffer, pixels, 0, pixels.Length);
+                        Marshal.Copy(buffer, pixels, 0, byteCount);
                     }
                     else
                     {
@@ -117,7 +119,8 @@ public sealed class PdfiumRenderService : IPdfRenderService
                         Width = width,
                         Height = height,
                         Stride = packedStride,
-                        Pixels = pixels
+                        Pixels = pixels,
+                        IsPooled = true
                     };
                 }
                 finally
@@ -132,7 +135,7 @@ public sealed class PdfiumRenderService : IPdfRenderService
                         fpdfview.FPDF_ClosePage(page);
                     }
 
-                    fpdfview.FPDF_CloseDocument(document);
+                    _runtime.CloseDocument(document);
                 }
             }, cancellationToken).ConfigureAwait(false);
         }

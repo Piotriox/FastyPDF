@@ -17,6 +17,7 @@ public partial class RenderedPageViewModel : ObservableObject
     [ObservableProperty] private ImageSource? _rightImage;
     [ObservableProperty] private bool _hasRightPage;
     [ObservableProperty] private string _pageLabel = string.Empty;
+    public bool IsRendered { get; set; }
 }
 
 public partial class ReaderViewModel : ToolViewModelBase
@@ -28,9 +29,11 @@ public partial class ReaderViewModel : ToolViewModelBase
     private readonly PickerService _pickers;
     private readonly IAppLog _log;
     private CancellationTokenSource? _loadCts;
+    private CancellationTokenSource? _renderCts;
     private double _pageWidthPoints = 595;
     private double _pageHeightPoints = 842;
     private List<int> _searchMatchingPages = [];
+    private const int RenderWindow = 3;
 
     public ReaderViewModel(
         IPdfDocumentService documents,
@@ -152,7 +155,7 @@ public partial class ReaderViewModel : ToolViewModelBase
         PageIndex = Math.Clamp(index, 0, Math.Max(0, PageCount - 1));
         OnPropertyChanged(nameof(PageLabel));
         _ = _recent.UpdateLastPageAsync(SourcePath!, PageIndex);
-        await Task.CompletedTask;
+        await RenderVisiblePagesAsync();
     }
 
     public async Task ScrollToRowForPageAsync(int pageIndex)
@@ -162,28 +165,28 @@ public partial class ReaderViewModel : ToolViewModelBase
         PageIndex = pageIndex;
         OnPropertyChanged(nameof(PageLabel));
         _ = _recent.UpdateLastPageAsync(SourcePath!, PageIndex);
-        await Task.CompletedTask;
+        await RenderVisiblePagesAsync();
     }
 
     [RelayCommand]
     private Task ZoomInAsync()
     {
         Zoom = Math.Min(Zoom + 0.2, 4);
-        return RebuildRenderedPagesAsync(_loadCts?.Token ?? CancellationToken.None);
+        return CancelAndRebuildAsync();
     }
 
     [RelayCommand]
     private Task ZoomOutAsync()
     {
         Zoom = Math.Max(Zoom - 0.2, 0.25);
-        return RebuildRenderedPagesAsync(_loadCts?.Token ?? CancellationToken.None);
+        return CancelAndRebuildAsync();
     }
 
     [RelayCommand]
     private Task SetZoomAsync(double zoom)
     {
         Zoom = Math.Clamp(zoom, 0.25, 4.0);
-        return RebuildRenderedPagesAsync(_loadCts?.Token ?? CancellationToken.None);
+        return CancelAndRebuildAsync();
     }
 
     [RelayCommand]
@@ -191,7 +194,7 @@ public partial class ReaderViewModel : ToolViewModelBase
     {
         var targetWidth = IsTwoPageMode ? _pageWidthPoints * 2 + 20 : _pageWidthPoints;
         Zoom = Math.Clamp(ViewportWidth / Math.Max(targetWidth, 1), 0.25, 4);
-        return RebuildRenderedPagesAsync(_loadCts?.Token ?? CancellationToken.None);
+        return CancelAndRebuildAsync();
     }
 
     [RelayCommand]
@@ -201,18 +204,24 @@ public partial class ReaderViewModel : ToolViewModelBase
         var scaleX = ViewportWidth / Math.Max(targetWidth, 1);
         var scaleY = ViewportHeight / Math.Max(_pageHeightPoints, 1);
         Zoom = Math.Clamp(Math.Min(scaleX, scaleY), 0.25, 4);
-        return RebuildRenderedPagesAsync(_loadCts?.Token ?? CancellationToken.None);
+        return CancelAndRebuildAsync();
     }
 
     [RelayCommand] private void ToggleThumbnails() => IsThumbnailsVisible = !IsThumbnailsVisible;
 
-    public Task ApplyDarkModeAsync() =>
-        RebuildRenderedPagesAsync(_loadCts?.Token ?? CancellationToken.None);
+    public Task ApplyDarkModeAsync() => CancelAndRebuildAsync();
 
     public Task ApplyTwoPageModeAsync()
     {
         OnPropertyChanged(nameof(PageLabel));
-        return RebuildRenderedPagesAsync(_loadCts?.Token ?? CancellationToken.None);
+        return CancelAndRebuildAsync();
+    }
+
+    private Task CancelAndRebuildAsync()
+    {
+        _renderCts?.Cancel();
+        _renderCts = new CancellationTokenSource();
+        return RebuildRenderedPagesAsync(_renderCts.Token);
     }
 
     [RelayCommand]
@@ -344,6 +353,7 @@ public partial class ReaderViewModel : ToolViewModelBase
     private void CloseDocument()
     {
         _loadCts?.Cancel();
+        _renderCts?.Cancel();
         SourcePath = null;
         PageCount = 0;
         PageIndex = 0;
@@ -397,35 +407,73 @@ public partial class ReaderViewModel : ToolViewModelBase
         }
         catch { }
 
-        var gate = new SemaphoreSlim(3);
+        await RenderVisiblePagesAsync(cancellationToken);
+    }
+
+    public Task RenderVisiblePagesAsync()
+    {
+        return RenderVisiblePagesAsync(_renderCts?.Token ?? _loadCts?.Token ?? CancellationToken.None);
+    }
+
+    private async Task RenderVisiblePagesAsync(CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(SourcePath) || RenderedPages.Count == 0) return;
+
         var rowList = RenderedPages.ToList();
-
-        var tasks = rowList.Select(async row =>
+        int currentRowIndex = 0;
+        for (int i = 0; i < rowList.Count; i++)
         {
-            await gate.WaitAsync(cancellationToken);
-            try
+            var r = rowList[i];
+            if (r.LeftPageIndex == PageIndex ||
+                (r.HasRightPage && r.LeftPageIndex + 1 == PageIndex))
             {
-                var leftImg = await _render.RenderPageAsync(SourcePath, row.LeftPageIndex, (float)Zoom, cancellationToken);
-                var leftBmp = BitmapConversion.ToWriteableBitmap(leftImg, IsDarkMode);
-                App.DispatcherQueue.TryEnqueue(() => row.LeftImage = leftBmp);
+                currentRowIndex = i;
+                break;
+            }
+        }
 
-                if (row.HasRightPage)
+        var startRow = Math.Max(0, currentRowIndex - RenderWindow);
+        var endRow = Math.Min(rowList.Count - 1, currentRowIndex + RenderWindow);
+
+        var gate = new SemaphoreSlim(3);
+        var tasks = new List<Task>();
+
+        for (var ri = startRow; ri <= endRow; ri++)
+        {
+            var row = rowList[ri];
+            if (row.IsRendered) continue;
+
+            tasks.Add(Task.Run(async () =>
+            {
+                await gate.WaitAsync(cancellationToken);
+                try
                 {
-                    var rightImg = await _render.RenderPageAsync(SourcePath, row.LeftPageIndex + 1, (float)Zoom, cancellationToken);
-                    var rightBmp = BitmapConversion.ToWriteableBitmap(rightImg, IsDarkMode);
-                    App.DispatcherQueue.TryEnqueue(() => row.RightImage = rightBmp);
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    using var leftImg = await _render.RenderPageAsync(SourcePath, row.LeftPageIndex, (float)Zoom, cancellationToken);
+                    var leftBmp = BitmapConversion.ToWriteableBitmap(leftImg, IsDarkMode);
+                    App.DispatcherQueue.TryEnqueue(() => row.LeftImage = leftBmp);
+
+                    if (row.HasRightPage)
+                    {
+                        using var rightImg = await _render.RenderPageAsync(SourcePath, row.LeftPageIndex + 1, (float)Zoom, cancellationToken);
+                        var rightBmp = BitmapConversion.ToWriteableBitmap(rightImg, IsDarkMode);
+                        App.DispatcherQueue.TryEnqueue(() => row.RightImage = rightBmp);
+                    }
+
+                    row.IsRendered = true;
                 }
-            }
-            catch (OperationCanceledException) { }
-            catch (Exception ex)
-            {
-                _log.Error($"Render row {row.LeftPageIndex} failed", ex);
-            }
-            finally
-            {
-                gate.Release();
-            }
-        });
+                catch (OperationCanceledException) { }
+                catch (Exception ex)
+                {
+                    _log.Error($"Render row {row.LeftPageIndex} failed", ex);
+                }
+                finally
+                {
+                    gate.Release();
+                }
+            }, cancellationToken));
+        }
 
         await Task.WhenAll(tasks);
     }
@@ -440,7 +488,7 @@ public partial class ReaderViewModel : ToolViewModelBase
             {
                 try
                 {
-                    var image = await _render.RenderThumbnailAsync(SourcePath!, page.PageIndex, 120, cancellationToken);
+                    using var image = await _render.RenderThumbnailAsync(SourcePath!, page.PageIndex, 100, cancellationToken);
                     App.DispatcherQueue.TryEnqueue(() =>
                     {
                         page.Preview = BitmapConversion.ToWriteableBitmap(image);

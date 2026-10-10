@@ -7,6 +7,8 @@ public sealed class PdfiumRuntime : IDisposable
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
     private bool _initialized;
+    private string? _cachedPath;
+    private FpdfDocumentT? _cachedDocument;
 
     public async Task<T> ExecuteAsync<T>(Func<T> action, CancellationToken cancellationToken)
     {
@@ -45,6 +47,11 @@ public sealed class PdfiumRuntime : IDisposable
 
     public FpdfDocumentT LoadDocument(string path)
     {
+        if (_cachedDocument is not null && _cachedPath == path)
+        {
+            return _cachedDocument;
+        }
+
         if (!File.Exists(path))
         {
             throw new PdfOperationException(PdfErrorKind.FileNotFound, "PDF dosyası bulunamadı.");
@@ -67,6 +74,34 @@ public sealed class PdfiumRuntime : IDisposable
         return document;
     }
 
+    public void CacheDocument(string path)
+    {
+        EvictCache();
+        EnsureInitialized();
+        _cachedDocument = LoadDocument(path);
+        _cachedPath = path;
+    }
+
+    public void CloseDocument(FpdfDocumentT document)
+    {
+        if (document == _cachedDocument)
+        {
+            return;
+        }
+
+        fpdfview.FPDF_CloseDocument(document);
+    }
+
+    public void EvictCache()
+    {
+        if (_cachedDocument is not null)
+        {
+            fpdfview.FPDF_CloseDocument(_cachedDocument);
+            _cachedDocument = null;
+            _cachedPath = null;
+        }
+    }
+
     public void Dispose()
     {
         if (!_initialized)
@@ -77,6 +112,7 @@ public sealed class PdfiumRuntime : IDisposable
         _gate.Wait();
         try
         {
+            EvictCache();
             fpdfview.FPDF_DestroyLibrary();
             _initialized = false;
         }

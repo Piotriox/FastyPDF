@@ -24,7 +24,7 @@ public sealed class WicImageEncoder : IImageEncoder
         // JPEG does not support transparency/alpha channel; use Ignore. PNG supports Premultiplied.
         var alphaMode = isJpeg ? BitmapAlphaMode.Ignore : BitmapAlphaMode.Premultiplied;
         var softwareBitmap = new SoftwareBitmap(BitmapPixelFormat.Bgra8, image.Width, image.Height, alphaMode);
-        softwareBitmap.CopyFromBuffer(image.Pixels.AsBuffer());
+        softwareBitmap.CopyFromBuffer(image.Pixels.AsBuffer(0, image.PixelByteCount));
 
         var directory = Path.GetDirectoryName(outputPath);
         if (!string.IsNullOrEmpty(directory))
