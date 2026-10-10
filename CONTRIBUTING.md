@@ -1,6 +1,6 @@
 # Contributing to FastyPDF
 
-Thank you for your interest in contributing! Please keep changes small, focused, and aligned with our offline-first and privacy-focused principles.
+Thank you for your interest in contributing. Please keep changes small, focused, and aligned with our offline-first and privacy-focused principles.
 
 ## Setup
 
@@ -13,9 +13,15 @@ Thank you for your interest in contributing! Please keep changes small, focused,
    dotnet build src/FastyPDF/FastyPDF.csproj -c Debug -p:Platform=x64
    ```
 
+## Project Structure
+
+- `src/FastyPDF.Core` — Platform-independent PDF logic: services, models, abstractions, and exceptions. All PDF manipulation, rendering, and text extraction code lives here.
+- `src/FastyPDF` — WinUI 3 application: views, view models, navigation, and platform-specific services such as image encoding and file picking.
+- `tests/FastyPDF.Core.Tests` — Unit tests for the core library.
+
 ## Guidelines
 
-- Put PDF logic in `src/FastyPDF.Core`, not in views.
+- Put PDF logic in `src/FastyPDF.Core`, not in views or view models.
 - Keep UI in WinUI 3 / XAML. Do not add a WebView-based interface.
 - Do not send user files to a network service.
 - Prefer a new service, view model, and page when adding a tool.
